@@ -1,0 +1,5 @@
+# Ignora arquivos inuteis
+copia.*
+
+# Ignora pycache
+__pycache__
