@@ -21,31 +21,31 @@ def read_automaton(automaton_name):
     with open(automaton_name, 'r', encoding='utf8') as machine:
 
         line = machine.readline()
-        definition = make_definition(line)
-
-        # Descarta a linha escrita "Prog"
-        machine.readline()
+        prog_name = machine.readline().replace('\n', '')
+        definition = make_definition(line, prog_name)
 
         # Lê as linhas de transições e armazena em um dict, na forma
         # {transição : estado_novo}
-        # EX:['(q0,a)=q1\n', '(q0,b)=q2\n', '(q1,b)=q2\n', '(q3,b)=q2']
+        # EX:{('q0', 'a'): 'q1', ('q0', 'b'): 'q2', ('q3', 'a'): 'q3', ('q3', 'b'): 'q2'}
         transitions = {}
         for l in machine:
             transition, new_state = get_transition(l)
             transitions[transition] = new_state
 
+    #         4-upla,      dict
     return (definition, transitions)
 
 
 '''
-    make_definition: String -> List
-    Ao receber uma linha, retorna uma Lista com cada parte da definição parseada
+    make_definition: String -> Tuple
+    Ao receber uma linha, retorna uma 4-upla com cada parte da definição parseada
     [ lista_estados, alfabeto, inicial, lista_finais ]
 '''
-def make_definition(line):
+def make_definition(line, prog_name):
     # Lê a definição do autômato e separa ele em um vetor
     # EX: ['AUTÔMATO=({q0,q1,q2,q3}', '{a,b}', 'q0', '{q1,q3})\n']
-    definition = line.replace(',{', '|{').replace(',Prog,', '|').split('|')
+    prog_name = ',' + prog_name + ','
+    definition = line.replace(',{', '|{').replace(prog_name, '|').split('|')
 
     # Na primeira posição, apaga tudos os frufrus e transforma em uma lista separando por ','
     states = definition[0].replace("AUTÔMATO=(", '').replace('{','').replace('}','').split(',')
@@ -57,7 +57,7 @@ def make_definition(line):
     finals = definition[3].replace(")\n", '').replace('{','').replace('}','').split(',')
 
     # Retorna o valor final
-    return [ states, sigma, definition[2], finals ]
+    return ( states, sigma, definition[2], finals )
 
 
 '''

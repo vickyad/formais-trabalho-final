@@ -1,5 +1,8 @@
 # Ignora arquivos inuteis
 copia.*
+bagucinha.*
 
 # Ignora pycache
 __pycache__
+
+# Nhadoro vocês <3
