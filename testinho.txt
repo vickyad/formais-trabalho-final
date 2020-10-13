@@ -4,6 +4,5 @@ Prog
 (q0,b)=q2
 (q1,b)=q2
 (q2,a)=q3
-(q2,a)=q2
 (q3,a)=q3
 (q3,b)=q2
