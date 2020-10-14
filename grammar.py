@@ -164,7 +164,7 @@ class Grammar:
     def make_productions(
             self,
             automaton: Automaton,
-            state_to_variable: Dict[str, str]):
+            state_to_variable: Dict[str, str]) -> None:
         '''
         Gera as produções da gramática a partir da função programa de um
         autômato e o mapeamento de estados pra variáveis.
@@ -186,7 +186,7 @@ class Grammar:
     def mark_finals(
             self,
             automaton: Automaton,
-            state_to_variable: Dict[str, str]):
+            state_to_variable: Dict[str, str]) -> None:
         '''
         Marca as variáveis da gramática como "finais" quando correspondem a
         algum estado final de um autômato. Marcar como final significa fazer
@@ -249,7 +249,7 @@ class Grammar:
         # Não há produção para a variável atual e o símbolo necessário.
         return None
 
-    def derive(self, word) -> Optional[Derivation]:
+    def derive(self, word: str) -> Optional[Derivation]:
         '''
         Verifica se uma palavra segue a gramática, e, portanto, se a palavra
         é parte da linguagem gerada pela gramática.
