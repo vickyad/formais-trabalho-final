@@ -7,8 +7,7 @@
 '''
 
 import re
-from typing import NamedTuple, Dict, List
-from io import StringIO
+from typing import NamedTuple, Dict, List, TextIO
 
 class TransitionInput(NamedTuple):
     state: str
@@ -65,7 +64,7 @@ def split_definition(line: str, prog_name: str) -> List[str]:
     line = line.replace(prog_name, '|').replace('{', '').replace('}', '')
     return line.split('|')
 
-def make_prog_function(machine: StringIO) -> Dict[TransitionInput, str]:
+def make_prog_function(machine: TextIO) -> Dict[TransitionInput, str]:
     transitions = {}
     for line in machine:
         transition = get_transition(line)

@@ -1,6 +1,6 @@
 import string
 
-from typing import NamedTuple, Optional, List
+from typing import NamedTuple, Optional, List, Dict
 from automaton_convert import Automaton
 
 # Tipo das saídas das produções. Sempre na forma aA, ou ε na última transição.
@@ -27,6 +27,9 @@ def derivations_to_str(derivations: List[Derivation]) -> str:
     return output
 
 class Grammar:
+    productions: Dict[str, List[Derivation]]
+    initial: str
+
     def __init__(self, automaton: Automaton):
         '''
             Dicionario de listas duplas, onde cada valor:
@@ -36,8 +39,6 @@ class Grammar:
                 | [ (terminal, variavel), 'ε'] <- Estado final
         '''
         self.productions = {}
-        ''' Estado inicial '''
-        self.initial = ''
         self.generate_grammar(automaton)
 
     def __str__(self):
@@ -52,7 +53,7 @@ class Grammar:
 
     def generate_grammar(self, automaton: Automaton):
         variable_names = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        state_to_variable = {}
+        state_to_variable: Dict[str, str] = {}
 
         # Cria todas as listas de produções de cada variavel (vazias)
         for state in automaton.states:
