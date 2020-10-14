@@ -62,12 +62,15 @@ class Grammar:
     '''
     Uma gramática regular à direita.
 
+    O campo 'terminals' é uma lista de símbolos terminais, o alfabeto.
+
     O campo 'productions' é um dicionário que mapeia variáveis para possíveis
     derivações. Sempre no formato: "A -> aB", com exceção do caso "A -> ε".
 
     O campo 'initial' define a variável inicial da gramática.
     '''
 
+    terminals: List[str]
     productions: Dict[str, List[Derivation]]
     initial: str
 
@@ -79,12 +82,15 @@ class Grammar:
         # Inicializa produções como vazias.
         self.productions = {}
 
+        # Os dois alfabetos são o mesmo.
+        self.terminals = automaton.alphabet
+
         # Inicializa variáveis e retorna o mapeamento estado -> variável.
         state_to_variable = self.init_variables(automaton)
-        # Gera as produções.
-        self.make_productions(automaton, state_to_variable)
         # Inicializa o símbolo inicial para corresponder ao estado inicial.
         self.initial = state_to_variable[automaton.initial]
+        # Gera as produções.
+        self.make_productions(automaton, state_to_variable)
         # Marca os estados finais.
         self.mark_finals(automaton, state_to_variable)
 
@@ -95,21 +101,31 @@ class Grammar:
         '''
 
         # Lista de letras disponíveis.
-        variable_names = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        variable_names = "ABCDEFGHIJKLMNOPQRTUVWXYZ"
+        # Primeira letra disponível.
+        cursor = 0
         # Iniciaiza o mapeamento, o dicionário.
-        state_to_variable = {}
+        state_to_variable: Dict[str, str] = { }
 
         # Para cada estado do autômato, faça:
         for state in automaton.states:
             # Índice da primeira letra disponível.
             current = len(state_to_variable)
+
+            # Esse estado é o inicial?
+            if state == automaton.initial:
+                # Se sim, vamos usar a convenção S.
+                variable = 'S'
             # Existem letras disponíves?
-            if current < len(variable_names):
+            elif cursor < len(variable_names):
                 # Se sim, use.
-                variable = variable_names[current] 
+                variable = variable_names[cursor] 
+                # A letra atual não está mais disponível.
+                cursor += 1
             else:
-                # Se não, paciência, vamos usar o nome do estado.
+                # Senão, paciência, vamos usar o nome do estado.
                 variable = state
+
             # As produções para esta variável começam vazias.
             self.productions[variable] = []
             # Mapeia o estado para a variável.
@@ -128,9 +144,7 @@ class Grammar:
         '''
 
         # Para cada transição:
-        for trans_input in automaton.prog_function:
-            # Estado de saída.
-            new_state = automaton.prog_function[trans_input]
+        for trans_input, new_state in automaton.prog_function.items():
             # Variável correspondenete ao estado de entrada.
             input_variable = state_to_variable[trans_input.state]
             # Variável correspondenete ao estado de saída.
@@ -160,18 +174,22 @@ class Grammar:
             # produções da variável correspondente.
             self.productions[variable].append(EMPTY_DERIVATION)
 
-
     def __str__(self):
         '''
         Converte a gramática para texto. Método mágico do Python.
         '''
         
-        # Começamos com a string de saída vazia.
-        output = ''
-        # Para cada variável.
-        for variableIn in self.productions:
-            # Pegando as produções cuja entrada seja a variável.
-            derivations = self.productions[variableIn]
+        # Colocando variáveis e terminains em duas string, com os elementos 
+        # separados por vírgulas.
+        variables = ','.join(self.productions.keys())
+        terminals = ','.join(self.terminals)
+
+        # Começamos com o cabeçalho da definição.
+        definition = 'GRAMMAR=({{{}}},{{{}}},Prod,{})\nProd\n'
+        output = definition.format(variables, terminals, self.initial)
+
+        # Para cada variável e derivações cuja entrada é a variável.
+        for variableIn, derivations in self.productions.items():
             # Só usar essa variável se tiver uma produção.
             if len(derivations) > 0:
                 # Converte cada derivação para string.
