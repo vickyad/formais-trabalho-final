@@ -5,8 +5,8 @@
 
     Alunos: Bruno Zimmermann, Jordi Pujol e Victoria Duarte
 '''
-from automaton_convert import *
-from grammar import *
+from automaton_convert import read_automaton
+from grammar import Grammar, derivations_to_str
 
 ''' EXERCICIO 1 '''
 ''' item a '''
@@ -15,12 +15,11 @@ from grammar import *
     definition -> lista da definição parseada
     transition -> dicionario com transições
 ''' 
-definition, transitions = read_automaton('testinho.txt')
+automaton = read_automaton('testinho.txt')
 
-grammar = Grammar(definition, transitions)
+grammar = Grammar(automaton)
 
-
-# grammar.print_produtions()
+print(grammar)
 
 ''' item b '''
 # o programa vai receber um input de palavra, mas por agora vamos usar uma palavra fixa para testes
@@ -28,6 +27,6 @@ grammar = Grammar(definition, transitions)
 
 word = 'abaaa'
 
-retorno = grammar.verify_grammar(word)
+derivations = grammar.verify_grammar(word)
 
-print(retorno)
+print(derivations_to_str(derivations))
