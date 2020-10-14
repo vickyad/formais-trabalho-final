@@ -6,7 +6,7 @@
     Alunos: Bruno Zimmermann, Jordi Pujol e Victoria Duarte
 '''
 from automaton import read_automaton
-from grammar import Grammar, derivations_to_str
+from grammar import Grammar
 import sys
 
 ''' EXERCICIO 1 '''
@@ -38,10 +38,10 @@ if len(sys.argv) >= 2:
 else:
     word = 'abaaa'
 
-derivations = grammar.derive_word(word)
+derivation = grammar.derive(word)
 
-if derivations is None:
+if derivation is None:
     print("'", word, "' não faz parte da linguagem", sep='')
 else:
-    print(derivations_to_str(derivations))
+    print(derivation)
 

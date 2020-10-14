@@ -3,60 +3,86 @@ import string
 from typing import NamedTuple, Optional, List, Dict
 from automaton import Automaton
 
-# Tipo das saídas das produções. Sempre na forma aA, ou ε na última transição.
-class Derivation(NamedTuple):
+class ProdOutput(NamedTuple):
     '''
-    Uma derivação de uma gramática regular à direita. Saída de uma produção.
-    Sempre no formato "aA", onde "a" é um terminal, e "A" é uma variável. A
-    exceção é o caso da derivação que no formato "ε" (palavra vazia).
+    A saída de uma produção. Sempre no format aA. A exceção é a palavra vazia.
 
-    O campo 'terminal' é o símbolo terminal dessa derivação, com exceção do caso
-    da palavra vazia.
+    O campo 'terminal' é o símbolo terminal da saída. Corresponde a "a" no
+    formato acima. Vazio se a saída é a palavra vazia.
 
-    O campo 'variable' é a variável dessa derivação, que só existe se o terminal
-    não for a palavra vazia, ou seja, é None se terminal for a palavra vazia.
+    O campo 'variable' é a variável da saída. Corresponde a "A" no formato
+    acima. Vazio se a saída é a palavra vazia.
     '''
-
+    
     terminal: str
-    variable: Optional[str]
-
-    # Representação textual.
-    def __str__(self):
+    variable: str
+    
+    def __str__(self) -> str:
         '''
-        Converte esta derivação para texto. Método mágico do Python.
+        Converte essa saída para representação textual.
         '''
-
-        # Testa se essa derivação resulta na palavra vazia.
-        if self.variable is None:
-            # Se sim, retorna o símbolo para a palavra vazia.
+        
+        # Lida com a palavra vazia.
+        if self.terminal == '' and self.variable == '':
             return 'ε'
-        # Senão, retorna o terminal seguido da variável.
+
+        # Outros casos.
         return '{}{}'.format(self.terminal, self.variable)
 
 # Saída final de uma produção.
-EMPTY_DERIVATION: Derivation = Derivation(terminal='', variable=None)
+EMPTY_OUTPUT: ProdOutput = ProdOutput(terminal='', variable='')
 
-def derivations_to_str(derivations: List[Derivation]) -> str:
+class Production(NamedTuple):
     '''
-    Converte uma lista de derivações em texto.
+    Uma possível produção feita pela gramática. No format "A -> aB" ou "A -> ε".
+
+    O campo 'input' corresponde à entrada da produção (no exemplo acima, "A").
+
+    O campo 'output' corresponde à saída da produção (no exemplo acima, "aB" ou
+    "ε").
     '''
 
-    # A palavra começa vazia.
-    word = ''
-    # Começamos sem nada na string de saída.
-    output = ''
+    input: str
+    output: ProdOutput
 
-    # Para todas as derivações, faça:
-    for derivation in derivations:
-        # Coloca o terminal na palavra.
-        word = '{}{}'.format(word, derivation.terminal)
-        # Adiciona a derivação atual na saída junto com a palavra atual.
-        output = '{}{}{} => '.format(output, word, derivation.variable)
+    def __str__(self) -> str:
+        '''
+        Representação textual da produção.
+        '''
+        return '{} -> {}'.format(self.input, self.output)
 
-    # Adicionar o passo onde se substitui a última variável pela palavra vazia.
-    output = '{}{}'.format(output, word)
-    # Retornar a output construída.
-    return output
+# Tipo das saídas das produções. Sempre na forma aA, ou ε na última transição.
+class Derivation(NamedTuple):
+    '''
+    Uma derivação de uma palavra. A derivação é o caminho que a gramática faz
+    para produzir uma palavra.
+
+    O campo 'steps' representa os passos, em termos de produções, para chegar
+    na palavra final.
+    '''
+
+    steps: List[Production]
+
+    def __str__(self) -> str:
+        '''
+        Converte uma derivação em texto.
+        '''
+
+        # Na palavra em si ainda não tem nada.
+        word = ''
+        # Texto começa com o símbolo inicial.
+        text = self.steps[0].input
+
+        # Para todos os passos da derivação, faça:
+        for step in self.steps:
+            # Coloca o terminal na palavra.
+            word = '{}{}'.format(word, step.output.terminal)
+            # Adiciona o passo atual na saída junto com a palavra atual.
+            text = '{} => {}{}'.format(text, word, step.output.variable)
+
+        # Retornar a string construída.
+        return text
+
 
 class Grammar:
     '''
@@ -65,13 +91,14 @@ class Grammar:
     O campo 'terminals' é uma lista de símbolos terminais, o alfabeto.
 
     O campo 'productions' é um dicionário que mapeia variáveis para possíveis
-    derivações. Sempre no formato: "A -> aB", com exceção do caso "A -> ε".
+    saídas em tal que sejam parte de uma produção. Sempre no formato:
+    "A -> aB", com exceção do caso "A -> ε".
 
     O campo 'initial' define a variável inicial da gramática.
     '''
 
     terminals: List[str]
-    productions: Dict[str, List[Derivation]]
+    productions: Dict[str, List[ProdOutput]]
     initial: str
 
     def __init__(self, automaton: Automaton):
@@ -149,13 +176,12 @@ class Grammar:
             input_variable = state_to_variable[trans_input.state]
             # Variável correspondenete ao estado de saída.
             output_variable = state_to_variable[new_state]
-            # Instancia a derivação.
-            derivation = Derivation(
+            # Instancia a saída da produção.
+            output = ProdOutput(
                     terminal=trans_input.symbol,
                     variable=output_variable)
-            # Adiciona a derivação à lista de derivações possíveis daquela
-            # variável.
-            self.productions[input_variable].append(derivation)
+            # Adiciona a saída à lista de saídas possíveis daquela variável.
+            self.productions[input_variable].append(output)
 
     def mark_finals(
             self,
@@ -170,11 +196,11 @@ class Grammar:
         # Para cada estado final.
         for state in automaton.finals:
             variable = state_to_variable[state]
-            # Adicione a derivação que resulta na palavra vazia para as
-            # produções da variável correspondente.
-            self.productions[variable].append(EMPTY_DERIVATION)
+            # Adicione a saída de produção que resulta na palavra vazia dada
+            # a variável de entrada.
+            self.productions[variable].append(EMPTY_OUTPUT)
 
-    def __str__(self):
+    def __str__(self) -> str:
         '''
         Converte a gramática para texto. Método mágico do Python.
         '''
@@ -186,67 +212,74 @@ class Grammar:
 
         # Começamos com o cabeçalho da definição.
         definition = 'GRAMMAR=({{{}}},{{{}}},Prod,{})\nProd\n'
-        output = definition.format(variables, terminals, self.initial)
+        text = definition.format(variables, terminals, self.initial)
 
-        # Para cada variável e derivações cuja entrada é a variável.
-        for variableIn, derivations in self.productions.items():
+        # Para cada variável de entrada de uma produção, e lista de saídas de
+        # uma produção para aquela variável, faça:
+        for inputVariable, outputs in self.productions.items():
             # Só usar essa variável se tiver uma produção.
-            if len(derivations) > 0:
-                # Converte cada derivação para string.
-                derivations_str = map(str, derivations)
-                # Junta todas derivações usando ' | '.
-                joined = ' | '.join(derivations_str)
+            if len(outputs) > 0:
+                # Converte cada saída para string.
+                outputs_str = map(str, outputs)
+                # Junta todas saídas usando ' | '.
+                joined = ' | '.join(outputs_str)
                 # Coloca as produções daquela variável em uma linha.
-                output = '{}{} -> {},\n'.format(output, variableIn, joined)
+                text = '{}{} -> {}\n'.format(text, inputVariable, joined)
+
         # Retorna a string produzida.
-        return output
+        return text 
 
-    def derive(self, symbol: str, current_var: str) -> Optional[Derivation]:
+    def find_production(
+            self,
+            current_variable: str,
+            symbol: Optional[str]) -> Optional[Production]:
         '''
-        Encontra uma derivação que contenha o dado símbolo 'symbol', e que
-        substitua a dada variável 'current_var'.
+        Encontra uma produção que contenha o dado símbolo 'symbol', e que
+        substitua a dada variável 'current_variable'.
 
-        Caso a derivação seja encontrada, ela é retornada. Caso não seja
-        encontrada uma derivação, None é retornado.
+        Caso a produção seja encontrada, ela é retornada. Caso não seja
+        encontrada uma produção, None é retornado.
         '''
 
-        # Para cada produção:
-        for derivation in self.productions[current_var]:
-            # Se o terminal desta derivação for o nosso símbolo, encontramos.
-            if derivation.terminal == symbol:
-                return derivation
-        # Não há derivação para a variável atual e o símbolo necessário.
+        # Para cada saída de uma produção com a dada variável de entrada:
+        for output in self.productions[current_variable]:
+            # Se o terminal desta saída for o nosso símbolo, encontramos.
+            if output.terminal == symbol:
+                return Production(input=current_variable, output=output)
+        # Não há produção para a variável atual e o símbolo necessário.
         return None
 
-    def derive_word(self, word):
+    def derive(self, word) -> Optional[Derivation]:
         '''
         Verifica se uma palavra segue a gramática, e, portanto, se a palavra
         é parte da linguagem gerada pela gramática.
         '''
 
-        # Inicializa as derivações como sem derivações no momento.
-        derivations = []
+        # Inicializa a lista de passos da derivação como contendo somente o
+        # primeiro passo.
+        productions = []
 
         # A primeira variável é o símbolo inicial.
-        current_var = self.initial
+        current_variable = self.initial
 
-        # Leitura simbolo a simbolo da palavra
         for symbol in word:
-            # Tenta encontrar uma derivação.
-            derivation = self.derive(symbol, current_var)
-            if derivation is None:
+            # Tenta encontrar uma produção.
+            production = self.find_production(current_variable, symbol)
+            if production is None:
                 # Se não achou, a palavra não faz parte da linguagem.
                 return None
-            # Adiciona a derivação encontrada à lista de derivações.
-            derivations.append(derivation)
-            # Nova variável vem da derivação.
-            current_var = derivation.variable
+            # Adiciona a produção encontrada à lista de passos.
+            productions.append(production)
+            # Nova variável vem da saída da produção.
+            current_variable = production.output.variable
 
-        # Por último, precisamos encontrar uma derivação para a variável final
-        # que seja a palavra vazia.
-        derivation = self.derive('', current_var)
+        # Por último, precisamos encontrar uma produção para a variável final
+        # que resulte na palavra vazia.
+        production = self.find_production(current_variable, '')
         # Se não achar, a linguagem não contém a palavra.
-        if derivation is None:
+        if production is None:
             return None
-        # Se achou, tudo certo, retorne as derivações.
-        return derivations
+
+        # Se achou, tudo certo, retorne a derivação.
+        productions.append(production)
+        return Derivation(steps=productions)
