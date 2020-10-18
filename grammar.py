@@ -1,3 +1,11 @@
+'''
+TRABALHO FINAL
+LINGUAGENS FORMAIS E AUTOMATOS - 2020
+Prof. Lucio Duarte
+
+Alunos: Bruno Zimmermann, Jordi Pujol e Victoria Duarte
+'''
+
 import string
 
 from typing import NamedTuple, Optional, List, Dict
