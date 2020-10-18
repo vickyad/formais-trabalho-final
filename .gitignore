@@ -1,6 +1,8 @@
 # Ignora arquivos inuteis
 copia.*
 bagucinha.*
+*.csv
+*.txt
 
 # Ignora pycache
 __pycache__
