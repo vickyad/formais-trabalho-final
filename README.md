@@ -37,12 +37,17 @@ Prog
 (<qn>,<sn>)=<q0>
 ```
 
-where:
+##### where:
   < M >: automata name;
+  
   < qi >: for 0 ≤ i ≤ n, with n ∈ N and n ≥ 0, represents an automata state;
+  
   < si >: for 1 ≤ i ≤ n, with n ∈ N and n ≥ 1, represents a symbol of the alphabet of the recognized language;
+  
   < ini >: indicate the initial state of the automata, with ini been an automata state;
+  
   < fi >: for 0 ≤ i ≤ n, with n ∈ N and n ≥ 0, represents a final state of the automata, with si been an automata state;
+  
   (< qi >, < si >) =< qj >: describes the function applied to an estate qi and a symbol si that computes to state qj.
 
 
